@@ -1,5 +1,10 @@
 export enum EEntities {
-  User = 'User'
+  User = 'User',
+  Domain = 'Domain',
+  Topic = 'Topic',
+  Theme = 'Theme',
+  Question = 'Question',
+  FollowUpQuestion = 'FollowUpQuestion'
 }
 
 export type TEntityType<S> = {
@@ -8,5 +13,6 @@ export type TEntityType<S> = {
       : S[K] extends { type: 'boolean' } ? boolean
         : S[K] extends { type: 'uuid' } ? string
           : S[K] extends { type: 'datetime' } ? string
-            : unknown;
+            : S[K] extends { type: 'array' } ? unknown[]
+              : unknown;
 };

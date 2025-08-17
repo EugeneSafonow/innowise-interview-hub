@@ -7,7 +7,7 @@ import { EUserRole } from '@/common/models';
 
 @Injectable()
 export abstract class BaseNeodeService<T, CreateDto = Partial<T>, UpdateDto = Partial<T>> {
-  private readonly logger = new Logger(BaseNeodeService.name);
+  protected readonly logger = new Logger(BaseNeodeService.name);
   protected modelName: string;
   constructor(
     @Inject(NEO4J_TOKEN) protected readonly neode: Neode,
@@ -120,6 +120,73 @@ export abstract class BaseNeodeService<T, CreateDto = Partial<T>, UpdateDto = Pa
     } catch (error) {
       this.logger.error(`Error deleting ${this.modelName}:`, error);
       throw error;
+    }
+  }
+
+  async createMany(data: CreateDto[]): Promise<T[]> {
+    try {
+      const promises = data.map(item => this.neode.model(this.modelName).create(item));
+      const instances = await Promise.all(promises);
+      return await Promise.all(instances.map(instance => instance.toJson())) as T[];
+    } catch (error) {
+      this.logger.error(`Error creating multiple ${this.modelName}:`, error);
+      throw error;
+    }
+  }
+
+  async findOrCreateByTitle(title: string, defaultData: CreateDto): Promise<T> {
+    try {
+      const existing = await this.neode.model(this.modelName).first('title', title);
+      if (existing) {
+        return existing.toJson() as T;
+      }
+
+      const instance = await this.neode.model(this.modelName).create(defaultData);
+      return instance.toJson() as T;
+    } catch (error) {
+      this.logger.error(`Error finding or creating ${this.modelName}:`, error);
+      throw error;
+    }
+  }
+
+  async createRelationship(fromId: string, toId: string, relationshipType: string): Promise<void> {
+    try {
+      const fromNode = await this.neode.model(this.modelName).first('id', fromId);
+      if (!fromNode) {
+        throw new Error(`Source ${this.modelName} with id ${fromId} not found`);
+      }
+
+      const toNode = await this.neode.model(this.modelName).first('id', toId);
+      if (!toNode) {
+        throw new Error(`Target ${this.modelName} with id ${toId} not found`);
+      }
+
+      await fromNode.relateTo(toNode, relationshipType);
+    } catch (error) {
+      this.logger.error(`Error creating relationship ${relationshipType}:`, error);
+      throw error;
+    }
+  }
+
+  async executeInTransaction<R>(operations: (() => Promise<R>)[]): Promise<R[]> {
+    const session = this.neode.session();
+    const transaction = session.beginTransaction();
+
+    try {
+      const results = [];
+      for (const operation of operations) {
+        const result = await operation();
+        results.push(result);
+      }
+
+      await transaction.commit();
+      return results;
+    } catch (error) {
+      await transaction.rollback();
+      this.logger.error(`Transaction failed for ${this.modelName}:`, error);
+      throw error;
+    } finally {
+      await session.close();
     }
   }
 }
