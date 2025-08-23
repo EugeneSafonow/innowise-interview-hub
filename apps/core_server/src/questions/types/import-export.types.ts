@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
-import Neode from 'neode';
 
 // Base interfaces for internal use (matching existing logic with Map)
 export interface IFollowUpQuestion {
@@ -229,7 +228,3 @@ export type TTheme = ITheme;
 export type TTopic = ITopic;
 export type TDomain = IDomain;
 export type TImportExportRequest = IImportExportRequest;
-
-export type TNeo4jTransaction = ReturnType<ReturnType<Neode['session']>['beginTransaction']>;
-export type TNeo4jResult = Awaited<ReturnType<ReturnType<Neode['session']>['run']>>;
-export type TNeo4jRecord = TNeo4jResult['records'][0];

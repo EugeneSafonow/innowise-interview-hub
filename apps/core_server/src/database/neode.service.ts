@@ -149,16 +149,21 @@ export abstract class BaseNeodeService<T, CreateDto = Partial<T>, UpdateDto = Pa
     }
   }
 
-  async createRelationship(fromId: string, toId: string, relationshipType: string): Promise<void> {
+  async createRelationship(
+    fromId: string,
+    toId: string,
+    relationshipType: string,
+    targetModelName: string
+  ): Promise<void> {
     try {
       const fromNode = await this.neode.model(this.modelName).first('id', fromId);
       if (!fromNode) {
         throw new Error(`Source ${this.modelName} with id ${fromId} not found`);
       }
 
-      const toNode = await this.neode.model(this.modelName).first('id', toId);
+      const toNode = await this.neode.model(targetModelName).first('id', toId);
       if (!toNode) {
-        throw new Error(`Target ${this.modelName} with id ${toId} not found`);
+        throw new Error(`Target ${targetModelName} with id ${toId} not found`);
       }
 
       await fromNode.relateTo(toNode, relationshipType);

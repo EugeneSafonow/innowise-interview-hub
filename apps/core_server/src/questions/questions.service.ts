@@ -6,21 +6,11 @@ import { TAny } from '@packages/shared';
 
 import { SkipQuetionDTO, UpdatedAnswerDTO } from './questions.dto';
 import { IDomain } from './questions.dto';
-import { DomainService } from './services/domain.service';
-import { TopicService } from './services/topic.service';
-import { ThemeService } from './services/theme.service';
-import { QuestionService } from './services/question.service';
-import { FollowUpQuestionService } from './services/follow-up-question.service';
 
 @Injectable()
 export class QuestionsService {
   constructor(
-    private readonly neo4jService: Neo4jService,
-    private readonly domainService: DomainService,
-    private readonly topicService: TopicService,
-    private readonly themeService: ThemeService,
-    private readonly questionService: QuestionService,
-    private readonly followUpQuestionService: FollowUpQuestionService
+    private readonly neo4jService: Neo4jService
   ) {}
 
   async getFollowupQuestions(questionId: string) {
@@ -170,30 +160,6 @@ export class QuestionsService {
         HttpStatus.NOT_FOUND
       );
     }
-  }
-
-  async findDomainById(id: string) {
-    return this.domainService.findDomainById(id);
-  }
-
-  async findTopicById(id: string) {
-    return this.topicService.findTopicById(id);
-  }
-
-  async findThemeById(id: string) {
-    return this.themeService.findThemeById(id);
-  }
-
-  async findQuestionById(id: string) {
-    return this.questionService.findQuestionById(id);
-  }
-
-  async findFollowUpQuestionById(id: string) {
-    return this.followUpQuestionService.findFollowUpQuestionById(id);
-  }
-
-  async findQuestionsByTags(tags: string[]) {
-    return this.questionService.findQuestionsByTags(tags);
   }
 }
 
