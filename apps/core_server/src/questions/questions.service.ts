@@ -85,7 +85,7 @@ export class QuestionsService {
         theme.questions.set(questionId, {
           id: questionId,
           title: record.get('question_text'),
-          weight: record.get('question_weight').toNumber(),
+          weight: record.get('question_weight'),
           tags: record.get('question_tags') ?? [],
           followUpQuestions: [],
         });
@@ -100,7 +100,7 @@ export class QuestionsService {
           .map((fq: TAny) => ({
             id: fq.properties.id,
             title: fq.properties.title,
-            weight: fq.properties.weight.toNumber(),
+            weight: fq.properties.weight,
             tags: fq.properties.tags ?? [],
           }));
       }
