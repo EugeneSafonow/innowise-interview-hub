@@ -8,6 +8,9 @@ export const TopicSchema: Neode.SchemaObject = {
 
   createdAt: { type: 'datetime', default: () => new Date().toISOString() },
   updatedAt: { type: 'datetime', default: () => new Date().toISOString() },
+
+  domain: { type: 'relationship', target: 'Domain', direction: 'in', relationship: 'HAS_TOPIC' },
+  themes: { type: 'relationships', target: 'Theme', direction: 'out', relationship: 'HAS_THEME', eager: true },
 };
 
 export type TTopic = TEntityType<typeof TopicSchema>;

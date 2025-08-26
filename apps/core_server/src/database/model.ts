@@ -14,5 +14,6 @@ export type TEntityType<S> = {
         : S[K] extends { type: 'uuid' } ? string
           : S[K] extends { type: 'datetime' } ? string
             : S[K] extends { type: 'array' } ? unknown[]
-              : unknown;
+              : S[K] extends { type: 'relationship' } ? unknown[]
+                : unknown;
 };

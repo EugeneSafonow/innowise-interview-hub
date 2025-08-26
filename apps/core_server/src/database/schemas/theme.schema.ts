@@ -8,6 +8,8 @@ export const ThemeSchema: Neode.SchemaObject = {
 
   createdAt: { type: 'datetime', default: () => new Date().toISOString() },
   updatedAt: { type: 'datetime', default: () => new Date().toISOString() },
+
+  topic: { type: 'relationship', target: 'Topic', direction: 'in', relationship: 'HAS_THEME' },
 };
 
 export type TTheme = TEntityType<typeof ThemeSchema>;

@@ -8,6 +8,8 @@ export const DomainSchema: Neode.SchemaObject = {
 
   createdAt: { type: 'datetime', default: () => new Date().toISOString() },
   updatedAt: { type: 'datetime', default: () => new Date().toISOString() },
+
+  topics: { type: 'relationships', target: 'Topic', direction: 'out', relationship: 'HAS_TOPIC', eager: true },
 };
 
 export type TDomain = TEntityType<typeof DomainSchema>;

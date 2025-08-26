@@ -76,6 +76,34 @@ export abstract class BaseNeodeService<T, CreateDto = Partial<T>, UpdateDto = Pa
     }
   }
 
+  async findOneWithRelations(id: string): Promise<T | null> {
+    try {
+      const instance = await this.neode.model(this.modelName).first('id', id);
+      if (!instance) return null;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const nodeData = await instance.toJson() as any;
+
+      for (const [key, value] of Object.entries(nodeData)) {
+        if (value && typeof value === 'object') {
+          if ('_type' in value && 'node' in value) {
+            nodeData[key] = value.node;
+          }
+          else if (Array.isArray(value) && value.length > 0) {
+            const firstItem = value[0];
+            if (firstItem && typeof firstItem === 'object' && '_type' in firstItem && 'node' in firstItem) {
+              nodeData[key] = value.map(rel => rel.node);
+            }
+          }
+        }
+      }
+      return nodeData as T;
+    } catch (error) {
+      this.logger.error(`Error finding ${this.modelName} with relations by id:`, error);
+      throw error;
+    }
+  }
+
   async findByEmailAndName(name?: string, email?: string): Promise<T[]> {
     try {
       const query: Partial<{

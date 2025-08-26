@@ -1,4 +1,5 @@
 import { useSelector } from 'react-redux';
+import { useCallback } from 'react';
 
 import { useAppDispatch } from './use-dispatch';
 
@@ -8,7 +9,7 @@ import {
 } from '@/providers/store/selectors/questions';
 import {
   setQuestions, setDomains, setTopics, setThemes,
-  setFormData, clearFormData, setLoading, setError,
+  clearFormData, setLoading, setError,
 } from '@/providers/store/slices/questionsSlice';
 import { questionsApi } from '@/api/questions';
 import { ICreateQuestionDto } from '@/types/questions';
@@ -24,50 +25,62 @@ export const useQuestions = () => {
   const loading = useSelector(getQuestionsIsLoading);
   const error = useSelector(getQuestionsError);
 
-  const fetchDomains = async () => {
+  const fetchDomains = useCallback(async () => {
     try {
       dispatch(setLoading(true));
       const response = await questionsApi.getDomains();
       dispatch(setDomains(response.data));
-    } catch (err: any) {
-      dispatch(setError(err.message));
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      dispatch(setError(errorMessage));
     } finally {
       dispatch(setLoading(false));
     }
-  };
+  }, [dispatch]);
 
-  const fetchTopics = async (domainId: string) => {
+  const fetchTopics = useCallback(async (domainId: string) => {
     try {
       const response = await questionsApi.getTopics(domainId);
       dispatch(setTopics(response.data));
-    } catch (err: any) {
-      dispatch(setError(err.message));
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      dispatch(setError(errorMessage));
     }
-  };
+  }, [dispatch]);
 
-  const fetchThemes = async (topicId: string) => {
+  const fetchThemes = useCallback(async (topicId: string) => {
     try {
       const response = await questionsApi.getThemes(topicId);
       dispatch(setThemes(response.data));
-    } catch (err: any) {
-      dispatch(setError(err.message));
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      dispatch(setError(errorMessage));
     }
-  };
+  }, [dispatch]);
 
-  const createQuestion = async (data: ICreateQuestionDto) => {
+  const createQuestion = useCallback(async (data: ICreateQuestionDto) => {
     try {
       dispatch(setLoading(true));
       const response = await questionsApi.createQuestion(data);
       dispatch(setQuestions([...questions, response.data]));
       dispatch(clearFormData());
       return response.data;
-    } catch (err: any) {
-      dispatch(setError(err.message));
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      dispatch(setError(errorMessage));
       throw err;
     } finally {
       dispatch(setLoading(false));
     }
-  };
+  }, [dispatch, questions]);
+
+  const clearFormDataHandler = useCallback(() => {
+    dispatch(clearFormData());
+  }, [dispatch]);
+
+  const clearErrorHandler = useCallback(() => {
+    dispatch(setError(null));
+  }, [dispatch]);
 
   return {
     questions,
@@ -82,7 +95,7 @@ export const useQuestions = () => {
     fetchTopics,
     fetchThemes,
     createQuestion,
-    clearFormData: () => dispatch(clearFormData()),
-    clearError: () => dispatch(setError(null)),
+    clearFormData: clearFormDataHandler,
+    clearError: clearErrorHandler,
   };
 };

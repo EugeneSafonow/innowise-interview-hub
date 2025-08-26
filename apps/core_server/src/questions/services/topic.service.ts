@@ -5,12 +5,13 @@ import { BaseNeodeService } from '../../database/neode.service';
 import { NEO4J_TOKEN } from '../../database/neode.provider';
 import { EEntities } from '../../database/model';
 import { TTopic } from '../../database/schemas/topic.schema';
+import { DomainService } from './domain.service';
 
 import { TNeo4jTransaction } from '@/database';
 
 @Injectable()
 export class TopicService extends BaseNeodeService<TTopic, Partial<TTopic>, Partial<TTopic>> {
-  constructor(@Inject(NEO4J_TOKEN) neode: Neode) {
+  constructor(@Inject(NEO4J_TOKEN) neode: Neode, private readonly domainService: DomainService) {
     super(neode, EEntities.Topic);
   }
 
@@ -54,6 +55,27 @@ export class TopicService extends BaseNeodeService<TTopic, Partial<TTopic>, Part
         throw new NotFoundException('Topic not found');
       }
     } catch (error) {
+      throw error;
+    }
+  }
+
+  async findByDomainId(domainId: string): Promise<TTopic[]> {
+    try {
+      const domain = await this.domainService.findOneWithRelations(domainId);
+
+      if (!domain) {
+        throw new NotFoundException(`Domain with id ${domainId} not found`);
+      }
+
+      if (!domain.topics || !Array.isArray(domain.topics)) {
+        return [];
+      }
+
+      return domain.topics
+        .filter(topic => topic)
+        .sort((a, b) => a.title.localeCompare(b.title));
+    } catch (error) {
+      this.logger.error('Error finding topics by domain:', error);
       throw error;
     }
   }
