@@ -1,10 +1,10 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { NEO4J_TOKEN } from 'src/database/neode.provider';
-import { EEntities } from 'src/database/model';
+import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
 import Neode from 'neode';
 
 import { BaseNeodeService } from '../database/neode.service';
-import { TUser } from '../database/schemas/user.schema';
+import { NEO4J_TOKEN } from '../database';
+import { EEntities } from '../database/model';
+import { TUser } from '../database/types';
 import { CreateUserDTO, UpdateUserDTO } from './user.dto';
 
 @Injectable()

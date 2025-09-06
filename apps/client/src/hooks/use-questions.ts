@@ -12,7 +12,7 @@ import {
   clearFormData, setLoading, setError,
 } from '@/providers/store/slices/questionsSlice';
 import { questionsApi } from '@/api/questions';
-import { ICreateQuestionDto } from '@/types/questions';
+import { ICreateQuestionDto, INestedDomain } from '@/types/questions';
 
 export const useQuestions = () => {
   const dispatch = useAppDispatch();
@@ -58,6 +58,20 @@ export const useQuestions = () => {
     }
   }, [dispatch]);
 
+  const fetchStructure = useCallback(async (domainId: string, topicId?: string, themeId?: string): Promise<INestedDomain> => {
+    try {
+      dispatch(setLoading(true));
+      const response = await questionsApi.getStructure(domainId, topicId, themeId);
+      return response.data as INestedDomain;
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      dispatch(setError(errorMessage));
+      throw err;
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }, [dispatch]);
+
   const createQuestion = useCallback(async (data: ICreateQuestionDto) => {
     try {
       dispatch(setLoading(true));
@@ -94,6 +108,7 @@ export const useQuestions = () => {
     fetchDomains,
     fetchTopics,
     fetchThemes,
+    fetchStructure,
     createQuestion,
     clearFormData: clearFormDataHandler,
     clearError: clearErrorHandler,

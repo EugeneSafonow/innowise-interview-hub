@@ -1,7 +1,5 @@
 import Neode from 'neode';
 
-import { TEntityType } from '../model';
-
 export const TopicSchema: Neode.SchemaObject = {
   id: { type: 'uuid', primary: true, required: true },
   title: { type: 'string', required: true, unique: true },
@@ -12,5 +10,3 @@ export const TopicSchema: Neode.SchemaObject = {
   domain: { type: 'relationship', target: 'Domain', direction: 'in', relationship: 'HAS_TOPIC' },
   themes: { type: 'relationships', target: 'Theme', direction: 'out', relationship: 'HAS_THEME', eager: true },
 };
-
-export type TTopic = TEntityType<typeof TopicSchema>;

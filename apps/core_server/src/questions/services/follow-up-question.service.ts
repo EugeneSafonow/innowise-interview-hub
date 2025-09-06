@@ -2,29 +2,28 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import Neode from 'neode';
 
 import { BaseNeodeService } from '../../database/neode.service';
-import { NEO4J_TOKEN } from '../../database/neode.provider';
+import { NEO4J_TOKEN, TNeo4jTransaction } from '../../database';
 import { EEntities } from '../../database/model';
-import { TFollowUpQuestion } from '../../database/schemas/follow-up-question.schema';
 
-import { TNeo4jTransaction } from '@/database';
+import { IFollowUpQuestion } from '@/database';
 
 @Injectable()
 export class FollowUpQuestionService extends
-  BaseNeodeService<TFollowUpQuestion, Partial<TFollowUpQuestion>, Partial<TFollowUpQuestion>> {
+  BaseNeodeService<IFollowUpQuestion, Partial<IFollowUpQuestion>, Partial<IFollowUpQuestion>> {
   constructor(@Inject(NEO4J_TOKEN) neode: Neode) {
     super(neode, EEntities.FollowUpQuestion);
   }
 
-  async findOneByTitle(title: string): Promise<TFollowUpQuestion | null> {
+  async findOneByTitle(title: string): Promise<IFollowUpQuestion | null> {
     try {
       const instance = await this.neode.model(this.modelName).first('title', title);
-      return instance ? (await instance.toJson() as TFollowUpQuestion) : null;
+      return instance ? (await instance.toJson() as IFollowUpQuestion) : null;
     } catch (error) {
       throw error;
     }
   }
 
-  async findFollowUpQuestionById(id: string): Promise<TFollowUpQuestion> {
+  async findFollowUpQuestionById(id: string): Promise<IFollowUpQuestion> {
     try {
       const followUpQuestion = await this.findOne(id);
       if (!followUpQuestion) {
@@ -36,7 +35,7 @@ export class FollowUpQuestionService extends
     }
   }
 
-  async updateFollowUpQuestionById(id: string, data: Partial<TFollowUpQuestion>): Promise<TFollowUpQuestion> {
+  async updateFollowUpQuestionById(id: string, data: Partial<IFollowUpQuestion>): Promise<IFollowUpQuestion> {
     try {
       const followUpQuestion = await this.update(id, data);
       if (!followUpQuestion) {
@@ -59,11 +58,11 @@ export class FollowUpQuestionService extends
     }
   }
 
-  async findFollowUpQuestionsByTags(tags: string[]): Promise<TFollowUpQuestion[]> {
+  async findFollowUpQuestionsByTags(tags: string[]): Promise<IFollowUpQuestion[]> {
     try {
       const instances = await this.neode.model(this.modelName).all({ tags });
-      const promises = instances.map((node: Neode.Node<TFollowUpQuestion>) => node.toJson());
-      return await Promise.all(promises) as TFollowUpQuestion[];
+      const promises = instances.map((node: Neode.Node<IFollowUpQuestion>) => node.toJson());
+      return await Promise.all(promises) as IFollowUpQuestion[];
     } catch (error) {
       throw error;
     }

@@ -2,29 +2,28 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import Neode from 'neode';
 
 import { BaseNeodeService } from '../../database/neode.service';
-import { NEO4J_TOKEN } from '../../database/neode.provider';
+import { NEO4J_TOKEN, TNeo4jTransaction } from '../../database';
 import { EEntities } from '../../database/model';
-import { TTheme } from '../../database/schemas/theme.schema';
 import { TopicService } from './topic.service';
 
-import { TNeo4jTransaction } from '@/database';
+import { ITheme } from '@/database';
 
 @Injectable()
-export class ThemeService extends BaseNeodeService<TTheme, Partial<TTheme>, Partial<TTheme>> {
+export class ThemeService extends BaseNeodeService<ITheme, Partial<ITheme>, Partial<ITheme>> {
   constructor(@Inject(NEO4J_TOKEN) neode: Neode, private readonly topicService: TopicService) {
     super(neode, EEntities.Theme);
   }
 
-  async findOneByTitle(title: string): Promise<TTheme | null> {
+  async findOneByTitle(title: string): Promise<ITheme | null> {
     try {
       const instance = await this.neode.model(this.modelName).first('title', title);
-      return instance ? (await instance.toJson() as TTheme) : null;
+      return instance ? (await instance.toJson() as ITheme) : null;
     } catch (error) {
       throw error;
     }
   }
 
-  async findThemeById(id: string): Promise<TTheme> {
+  async findThemeById(id: string): Promise<ITheme> {
     try {
       const theme = await this.findOne(id);
       if (!theme) {
@@ -36,7 +35,7 @@ export class ThemeService extends BaseNeodeService<TTheme, Partial<TTheme>, Part
     }
   }
 
-  async updateThemeById(id: string, data: Partial<TTheme>): Promise<TTheme> {
+  async updateThemeById(id: string, data: Partial<ITheme>): Promise<ITheme> {
     try {
       const theme = await this.update(id, data);
       if (!theme) {
@@ -59,7 +58,7 @@ export class ThemeService extends BaseNeodeService<TTheme, Partial<TTheme>, Part
     }
   }
 
-  async findByTopicId(topicId: string): Promise<TTheme[]> {
+  async findByTopicId(topicId: string): Promise<ITheme[]> {
     try {
       const topic = await this.topicService.findOneWithRelations(topicId);
 

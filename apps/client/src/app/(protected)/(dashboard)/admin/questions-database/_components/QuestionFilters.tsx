@@ -1,26 +1,75 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-export const QuestionFilters = () => {
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [minWeight, setMinWeight] = React.useState('');
-  const [maxWeight, setMaxWeight] = React.useState('');
-  const [tagsFilter, setTagsFilter] = React.useState('');
+export interface IFilters {
+  domainId: string,
+  topicId: string,
+  themeId: string,
+  questionTags: string[],
+  minWeight: number,
+  maxWeight: number,
+  searchQuery: string,
+}
 
-  const handleApplyFilters = () => {
-    // TODO: Implement filter logic
-    console.log('Applying filters:', { searchQuery, minWeight, maxWeight, tagsFilter });
+interface IQuestionFiltersProps {
+  onTagFilter: (questionTags: string[]) => void,
+  onWeightFilter: (minWeight: number, maxWeight: number) => void,
+  onSearchFilter: (searchQuery: string) => void,
+  onResetFilters: () => void,
+  filters: IFilters,
+}
+
+export const QuestionFilters = ({
+  onTagFilter,
+  onWeightFilter,
+  onSearchFilter,
+  onResetFilters,
+  filters,
+}: IQuestionFiltersProps) => {
+  const [searchQuery, setSearchQuery] = React.useState(filters.searchQuery);
+  const [minWeight, setMinWeight] = React.useState(filters.minWeight.toString());
+  const [maxWeight, setMaxWeight] = React.useState(filters.maxWeight.toString());
+  const [tagsFilter, setTagsFilter] = React.useState(filters.questionTags.join(', '));
+
+  useEffect(() => {
+    setSearchQuery(filters.searchQuery);
+    setMinWeight(filters.minWeight.toString());
+    setMaxWeight(filters.maxWeight.toString());
+    setTagsFilter(filters.questionTags.join(', '));
+  }, [filters]);
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    onSearchFilter(value);
+  };
+
+  const handleWeightChange = (type: 'min' | 'max', value: string) => {
+    const numValue = parseInt(value) || 0;
+    if (type === 'min') {
+      setMinWeight(value);
+      onWeightFilter(numValue, filters.maxWeight);
+    } else {
+      setMaxWeight(value);
+      onWeightFilter(filters.minWeight, numValue);
+    }
+  };
+
+  const handleTagsChange = (value: string) => {
+    setTagsFilter(value);
+    const tags = value.split(',').map(tag => tag.trim()).filter(tag => tag);
+    onTagFilter(tags);
   };
 
   const handleClearFilters = () => {
     setSearchQuery('');
-    setMinWeight('');
-    setMaxWeight('');
+    setMinWeight('0');
+    setMaxWeight('10');
     setTagsFilter('');
+    onResetFilters();
   };
 
   return (
@@ -32,7 +81,7 @@ export const QuestionFilters = () => {
           <Input
             placeholder='Search questions by title...'
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            onChange={e => handleSearchChange(e.target.value)}
             className='w-full'
           />
         </div>
@@ -42,7 +91,7 @@ export const QuestionFilters = () => {
             type='number'
             placeholder='Min weight'
             value={minWeight}
-            onChange={e => setMinWeight(e.target.value)}
+            onChange={e => handleWeightChange('min', e.target.value)}
             className='w-24'
             min='1'
             max='10'
@@ -51,7 +100,7 @@ export const QuestionFilters = () => {
             type='number'
             placeholder='Max weight'
             value={maxWeight}
-            onChange={e => setMaxWeight(e.target.value)}
+            onChange={e => handleWeightChange('max', e.target.value)}
             className='w-24'
             min='1'
             max='10'
@@ -59,13 +108,10 @@ export const QuestionFilters = () => {
           <Input
             placeholder='Tags (comma separated)'
             value={tagsFilter}
-            onChange={e => setTagsFilter(e.target.value)}
+            onChange={e => handleTagsChange(e.target.value)}
             className='w-48'
           />
-          <Button variant='outline' onClick={handleApplyFilters}>
-            Apply Filters
-          </Button>
-          <Button variant='ghost' onClick={handleClearFilters}>
+          <Button variant='outline' onClick={handleClearFilters}>
             Clear
           </Button>
         </div>

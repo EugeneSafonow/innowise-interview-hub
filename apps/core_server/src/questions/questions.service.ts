@@ -4,13 +4,21 @@ import { QueryResult } from 'neo4j-driver';
 
 import { TAny } from '@packages/shared';
 
-import { SkipQuetionDTO, UpdatedAnswerDTO } from './questions.dto';
+import { SkipQuetionDTO, UpdatedAnswerDTO, GetStructureDTO } from './questions.dto';
 import { IDomain } from './questions.dto';
+import { DomainService } from './services/domain.service';
+import { QuestionService } from './services/question.service';
+import { TopicService } from './services/topic.service';
+import { ThemeService } from './services/theme.service';
 
 @Injectable()
 export class QuestionsService {
   constructor(
-    private readonly neo4jService: Neo4jService
+    private readonly neo4jService: Neo4jService,
+    private readonly domainService: DomainService,
+    private readonly questionService: QuestionService,
+    private readonly topicService: TopicService,
+    private readonly themeService: ThemeService
   ) {}
 
   async getFollowupQuestions(questionId: string) {
@@ -159,6 +167,70 @@ export class QuestionsService {
         'Interviewer or InterviewQuestion not found!',
         HttpStatus.NOT_FOUND
       );
+    }
+  }
+
+  async getStructure(dto: GetStructureDTO) {
+    try {
+      const domain = await this.domainService.findOneWithRelations(dto.domainId);
+      if (!domain) {
+        throw new HttpException('Domain not found', HttpStatus.NOT_FOUND);
+      }
+
+      for (const topic of domain.topics || []) {
+        if (!topic.themes || topic.themes.length === 0) {
+          const fullTopic = await this.topicService.findOneWithRelations(topic.id);
+          if (fullTopic) {
+            topic.themes = fullTopic.themes;
+          }
+        }
+
+        for (const theme of topic.themes || []) {
+          if (!theme.questions || theme.questions.length === 0) {
+            const fullTheme = await this.themeService.findOneWithRelations(theme.id);
+            if (fullTheme) {
+              theme.questions = fullTheme.questions;
+            }
+          }
+
+          for (const question of theme.questions || []) {
+            if (!question.followUpQuestions || question.followUpQuestions.length === 0) {
+              const fullQuestion = await this.questionService.findOneWithRelations(question.id);
+              if (fullQuestion) {
+                question.followUpQuestions = fullQuestion.followUpQuestions;
+              }
+            }
+          }
+        }
+      }
+
+      return {
+        id: domain.id,
+        title: domain.title,
+        topics: domain.topics?.map(topic => ({
+          id: topic.id,
+          title: topic.title,
+          themes: topic.themes?.map(theme => ({
+            id: theme.id,
+            title: theme.title,
+            questions: theme.questions?.map(question => ({
+              id: question.id,
+              title: question.title,
+              weight: question.weight,
+              tags: question.tags || [],
+              followUpQuestions: question.followUpQuestions?.map(fq => ({
+                id: fq.id,
+                title: fq.title,
+                weight: fq.weight,
+                tags: fq.tags || [],
+              })) || [],
+            })) || [],
+          })) || [],
+        })) || [],
+      };
+    } catch (error) {
+      console.error('Error getting structure:', error);
+      throw error;
     }
   }
 }

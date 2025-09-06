@@ -63,6 +63,13 @@ export class SkipQuetionDTO {
   @IsString()
   questionId: string;
 }
+
+export class GetStructureDTO {
+  @ApiProperty({ type: String, description: 'Domain ID (required)' })
+  @IsString()
+  domainId: string;
+}
+
 export type TFollowup = {
   id: string,
   tags: string[],

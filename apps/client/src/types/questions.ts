@@ -31,6 +31,22 @@ export interface ITheme {
   title: string,
 }
 
+export interface INestedDomain extends IDomain {
+  topics: INestedTopic[],
+}
+
+export interface INestedTopic extends IDomain {
+  themes: INestedTheme[],
+}
+
+export interface INestedTheme extends ITheme {
+  questions: INestedQuestions[],
+}
+
+export interface INestedQuestions extends IQuestion {
+  followUpQuestions: IFollowUpQuestion[],
+}
+
 export interface ICreateQuestionDto {
   title: string,
   weight: number,

@@ -4,27 +4,27 @@ import Neode from 'neode';
 import { BaseNeodeService } from '../../database/neode.service';
 import { NEO4J_TOKEN, TNeo4jTransaction, TNeo4jRecord } from '../../database';
 import { EEntities } from '../../database/model';
-import { TDomain } from '../../database/schemas/domain.schema';
-import { TTopic } from '../../database/schemas/topic.schema';
+
+import { IDomain, ITopic } from '@/database';
 
 @Injectable()
-export class DomainService extends BaseNeodeService<TDomain, Partial<TDomain>, Partial<TDomain>> {
+export class DomainService extends BaseNeodeService<IDomain, Partial<IDomain>, Partial<IDomain>> {
   protected readonly logger = new Logger(DomainService.name);
 
   constructor(@Inject(NEO4J_TOKEN) neode: Neode) {
     super(neode, EEntities.Domain);
   }
 
-  async findOneByTitle(title: string): Promise<TDomain | null> {
+  async findOneByTitle(title: string): Promise<IDomain | null> {
     try {
       const instance = await this.neode.model(this.modelName).first('title', title);
-      return instance ? (await instance.toJson() as TDomain) : null;
+      return instance ? (await instance.toJson() as IDomain) : null;
     } catch (error) {
       throw error;
     }
   }
 
-  async findDomainById(id: string): Promise<TDomain> {
+  async findDomainById(id: string): Promise<IDomain> {
     try {
       const domain = await this.findOne(id);
       if (!domain) {
@@ -36,7 +36,7 @@ export class DomainService extends BaseNeodeService<TDomain, Partial<TDomain>, P
     }
   }
 
-  async updateDomainById(id: string, data: Partial<TDomain>): Promise<TDomain> {
+  async updateDomainById(id: string, data: Partial<IDomain>): Promise<IDomain> {
     try {
       const domain = await this.update(id, data);
       if (!domain) {
@@ -86,9 +86,9 @@ export class DomainService extends BaseNeodeService<TDomain, Partial<TDomain>, P
 
   async findOrCreateDomainsByTitle(
     domainTitles: string[]
-  ): Promise<Map<string, TDomain>> {
+  ): Promise<Map<string, IDomain>> {
     try {
-      const domainsMap = new Map<string, TDomain>();
+      const domainsMap = new Map<string, IDomain>();
 
       for (const title of domainTitles) {
         const domain = await this.findOrCreateByTitle(title, { title });
@@ -122,7 +122,7 @@ export class DomainService extends BaseNeodeService<TDomain, Partial<TDomain>, P
     }
   }
 
-  async getDomainsWithTopics(): Promise<TDomain[]> {
+  async getDomainsWithTopics(): Promise<IDomain[]> {
     try {
       const query = `
         MATCH (d:Domain)
@@ -137,8 +137,8 @@ export class DomainService extends BaseNeodeService<TDomain, Partial<TDomain>, P
 
       return result.records.map((record: TNeo4jRecord) => {
         const domain = record.get('d').properties;
-        const topics = record.get('topics').map((t: { properties: TTopic }) => t.properties);
-        return { ...domain, topics } as TDomain;
+        const topics = record.get('topics').map((t: { properties: ITopic }) => t.properties);
+        return { ...domain, topics } as IDomain;
       });
     } catch (error) {
       this.logger.error('Error getting domains with topics:', error);

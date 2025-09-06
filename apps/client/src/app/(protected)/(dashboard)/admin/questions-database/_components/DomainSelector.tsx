@@ -1,15 +1,39 @@
 'use client';
 
-import React from 'react';
+import { useEffect, useState } from 'react';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuestions } from '@/hooks/use-questions';
 
-export const DomainSelector = () => {
+interface IDomainSelectorProps {
+  onDomainChange: (domainId: string) => void,
+  onTopicChange: (topicId: string) => void,
+  onThemeChange: (themeId: string) => void,
+  selectedDomainId: string,
+  selectedTopicId: string,
+  selectedThemeId: string,
+}
+
+export const DomainSelector = ({
+  onDomainChange,
+  onTopicChange,
+  onThemeChange,
+  selectedDomainId,
+  selectedTopicId,
+  selectedThemeId,
+}: IDomainSelectorProps) => {
   const { domains, topics, themes, fetchTopics, fetchThemes } = useQuestions();
-  const [selectedDomain, setSelectedDomain] = React.useState<string>('');
-  const [selectedTopic, setSelectedTopic] = React.useState<string>('');
-  const [selectedTheme, setSelectedTheme] = React.useState<string>('');
+  const [selectedDomain, setSelectedDomain] = useState<string>(selectedDomainId || '');
+  const [selectedTopic, setSelectedTopic] = useState<string>(selectedTopicId || '');
+  const [selectedTheme, setSelectedTheme] = useState<string>(selectedThemeId || '');
+
+  useEffect(() => {
+    if (selectedDomainId !== selectedDomain) {
+      setSelectedDomain(selectedDomainId || '');
+      setSelectedTopic(selectedTopicId || '');
+      setSelectedTheme(selectedThemeId || '');
+    }
+  }, [selectedDomainId, selectedDomain, selectedTopicId, selectedTopic, selectedThemeId, selectedTheme]);
 
   const handleDomainChange = (domainId: string) => {
     setSelectedDomain(domainId);
@@ -17,6 +41,7 @@ export const DomainSelector = () => {
     setSelectedTheme('');
     if (domainId) {
       fetchTopics(domainId);
+      onDomainChange?.(domainId);
     }
   };
 
@@ -25,7 +50,13 @@ export const DomainSelector = () => {
     setSelectedTheme('');
     if (topicId) {
       fetchThemes(topicId);
+      onTopicChange?.(topicId);
     }
+  };
+
+  const handleThemeChange = (themeId: string) => {
+    setSelectedTheme(themeId);
+    onThemeChange?.(themeId);
   };
 
   return (
@@ -76,7 +107,7 @@ export const DomainSelector = () => {
           <label className='block text-sm font-medium mb-2'>Theme</label>
           <Select
             value={selectedTheme}
-            onValueChange={setSelectedTheme}
+            onValueChange={handleThemeChange}
             disabled={!selectedTopic}
           >
             <SelectTrigger>

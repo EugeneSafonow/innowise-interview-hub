@@ -35,6 +35,7 @@ export interface ICanvasProps {
 }
 
 export const Canvas = ({ nodes: allNodes }: ICanvasProps) => {
+  
   const { transformedNodes: initialNodes, initialEdges } =
     useCanvasInitialValues(allNodes);
 
@@ -161,7 +162,7 @@ export const Canvas = ({ nodes: allNodes }: ICanvasProps) => {
   // );
 
   return (
-    <div className="w-full h-[calc(100%-216px)] px-2">
+    <div className="w-full h-full px-2">
       {selectedQuestions > 0 && 
       <div className="text-center text-[#767676] font-semibold">{`Selected ${selectedQuestions} questions`}</div>}
       <ReactFlow

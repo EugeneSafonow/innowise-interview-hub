@@ -22,7 +22,7 @@ import { Response } from 'express';
 import { TAny } from '@packages/shared';
 
 import { QuestionsService } from './questions.service';
-import { SkipQuetionDTO, UpdatedAnswerDTO } from './questions.dto';
+import { SkipQuetionDTO, UpdatedAnswerDTO, GetStructureDTO } from './questions.dto';
 import { ExportService } from './export.service';
 import { ImportService } from './import.service';
 import { DomainService } from './services/domain.service';
@@ -158,6 +158,51 @@ export class QuestionsController {
       throw new HttpException('Topic ID is required', HttpStatus.BAD_REQUEST);
     }
     return await this.themeService.findByTopicId(topicId);
+  }
+
+  @Post('structure')
+  @ApiOperation({ summary: 'Get full structure starting from domain' })
+  @ApiResponse({
+    status: 200,
+    description: 'Full structure with domain, topics, themes, and questions',
+    content: {
+      'application/json': {
+        example: {
+          id: 'frontend',
+          title: 'Frontend Development',
+          topics: [
+            {
+              id: 'react',
+              title: 'React',
+              themes: [
+                {
+                  id: 'basics',
+                  title: 'Basics',
+                  questions: [
+                    {
+                      id: 'q1',
+                      title: 'What is React?',
+                      weight: 5,
+                      tags: ['junior'],
+                      followUpQuestions: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Domain ID is required' })
+  @ApiResponse({ status: 404, description: 'Domain not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  async getStructure(@Body() dto: GetStructureDTO) {
+    if (!dto.domainId) {
+      throw new HttpException('Domain ID is required', HttpStatus.BAD_REQUEST);
+    }
+    return await this.questionsService.getStructure(dto);
   }
 
   @Get('export')

@@ -35,8 +35,8 @@ export const useCanvasInitialValues = (nodes: ISetInterview[]) => {
             id: question.id,
             type: "questionNode",
             data: {
-              weight: question.weight,
-              tags: question.tags,
+              weight: question.weight || 0,
+              tags: question.tags || [],
               label: question.title,
             },
             themeTitle: theme.title,
@@ -48,8 +48,8 @@ export const useCanvasInitialValues = (nodes: ISetInterview[]) => {
               id: followUp.id,
               type: "followUpNode",
               data: {
-                weight: followUp.weight,
-                tags: followUp.tags,
+                weight: followUp.weight || 0,
+                tags: followUp.tags || [],
                 label: followUp.title,
               },
               questionTitle: question.title,
