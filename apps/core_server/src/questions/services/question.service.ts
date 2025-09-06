@@ -2,30 +2,29 @@ import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
 import Neode from 'neode';
 
 import { BaseNeodeService } from '../../database/neode.service';
-import { NEO4J_TOKEN } from '../../database/neode.provider';
+import { NEO4J_TOKEN, TNeo4jTransaction, TNeo4jRecord } from '../../database';
 import { EEntities } from '../../database/model';
-import { TQuestion } from '../../database/schemas/question.schema';
 
-import { TFollowUpQuestion, TNeo4jRecord, TNeo4jTransaction } from '@/database';
+import { IQuestion, IFollowUpQuestion } from '@/database';
 
 @Injectable()
-export class QuestionService extends BaseNeodeService<TQuestion, Partial<TQuestion>, Partial<TQuestion>> {
+export class QuestionService extends BaseNeodeService<IQuestion, Partial<IQuestion>, Partial<IQuestion>> {
   protected readonly logger = new Logger(QuestionService.name);
 
   constructor(@Inject(NEO4J_TOKEN) neode: Neode) {
     super(neode, EEntities.Question);
   }
 
-  async findOneByTitle(title: string): Promise<TQuestion | null> {
+  async findOneByTitle(title: string): Promise<IQuestion | null> {
     try {
       const instance = await this.neode.model(this.modelName).first('title', title);
-      return instance ? (await instance.toJson() as TQuestion) : null;
+      return instance ? (await instance.toJson() as IQuestion) : null;
     } catch (error) {
       throw error;
     }
   }
 
-  async findQuestionById(id: string): Promise<TQuestion> {
+  async findQuestionById(id: string): Promise<IQuestion> {
     try {
       const question = await this.findOne(id);
       if (!question) {
@@ -37,7 +36,7 @@ export class QuestionService extends BaseNeodeService<TQuestion, Partial<TQuesti
     }
   }
 
-  async updateQuestionById(id: string, data: Partial<TQuestion>): Promise<TQuestion> {
+  async updateQuestionById(id: string, data: Partial<IQuestion>): Promise<IQuestion> {
     try {
       const question = await this.update(id, data);
       if (!question) {
@@ -60,11 +59,11 @@ export class QuestionService extends BaseNeodeService<TQuestion, Partial<TQuesti
     }
   }
 
-  async findQuestionsByTags(tags: string[]): Promise<TQuestion[]> {
+  async findQuestionsByTags(tags: string[]): Promise<IQuestion[]> {
     try {
       const instances = await this.neode.model(this.modelName).all({ tags });
-      const promises = instances.map((node: Neode.Node<TQuestion>) => node.toJson());
-      return await Promise.all(promises) as TQuestion[];
+      const promises = instances.map((node: Neode.Node<IQuestion>) => node.toJson());
+      return await Promise.all(promises) as IQuestion[];
     } catch (error) {
       throw error;
     }
@@ -119,7 +118,7 @@ export class QuestionService extends BaseNeodeService<TQuestion, Partial<TQuesti
     }
   }
 
-  async getQuestionsWithFollowUps(): Promise<TQuestion[]> {
+  async getQuestionsWithFollowUps(): Promise<IQuestion[]> {
     try {
       const query = `
         MATCH (q:Question)
@@ -134,8 +133,8 @@ export class QuestionService extends BaseNeodeService<TQuestion, Partial<TQuesti
 
       return result.records.map((record: TNeo4jRecord) => {
         const question = record.get('q').properties;
-        const followUps = record.get('followUps').map((fq: { properties: TFollowUpQuestion }) => fq.properties);
-        return { ...question, followUps } as TQuestion;
+        const followUps = record.get('followUps').map((fq: { properties: IFollowUpQuestion }) => fq.properties);
+        return { ...question, followUps } as IQuestion;
       });
     } catch (error) {
       this.logger.error('Error getting questions with follow-ups:', error);

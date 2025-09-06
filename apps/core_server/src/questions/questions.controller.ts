@@ -2,7 +2,19 @@
 import * as fs from 'fs/promises';
 import path from 'path';
 
-import { Controller, Get, Post, Body, Res, HttpException, HttpStatus, UploadedFile, UseInterceptors, Put } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Res,
+  HttpException,
+  HttpStatus,
+  UploadedFile,
+  UseInterceptors,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -10,16 +22,23 @@ import { Response } from 'express';
 import { TAny } from '@packages/shared';
 
 import { QuestionsService } from './questions.service';
-import { SkipQuetionDTO, UpdatedAnswerDTO } from './questions.dto';
+import { SkipQuetionDTO, UpdatedAnswerDTO, GetStructureDTO } from './questions.dto';
 import { ExportService } from './export.service';
 import { ImportService } from './import.service';
+import { DomainService } from './services/domain.service';
+import { TopicService } from './services/topic.service';
+import { ThemeService } from './services/theme.service';
 
 @ApiTags('questions')
 @Controller('questions')
 export class QuestionsController {
-  constructor(private readonly questionsService: QuestionsService,
+  constructor(
+    private readonly questionsService: QuestionsService,
     private readonly importService: ImportService,
-    private readonly exportService: ExportService
+    private readonly exportService: ExportService,
+    private readonly domainService: DomainService,
+    private readonly topicService: TopicService,
+    private readonly themeService: ThemeService
   ) { }
 
   @Put('skip')
@@ -72,6 +91,118 @@ export class QuestionsController {
   })
   findAll() {
     return this.questionsService.findAll();
+  }
+
+  @Get('domains')
+  @ApiOperation({ summary: 'Get all domains' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of all domains',
+    content: {
+      'application/json': {
+        example: [
+          { id: 'frontend', title: 'Frontend Development' },
+          { id: 'backend', title: 'Backend Development' },
+        ],
+      },
+    },
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  async getDomains() {
+    return await this.domainService.findAll();
+  }
+
+  @Get('topics')
+  @ApiOperation({ summary: 'Get topics by domain' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of topics for the specified domain',
+    content: {
+      'application/json': {
+        example: [
+          { id: 'react', title: 'React' },
+          { id: 'typescript', title: 'TypeScript' },
+        ],
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Domain ID is required' })
+  @ApiResponse({ status: 404, description: 'Domain not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  async getTopicsByDomain(@Query('domainId') domainId: string) {
+    if (!domainId) {
+      throw new HttpException('Domain ID is required', HttpStatus.BAD_REQUEST);
+    }
+    return await this.topicService.findByDomainId(domainId);
+  }
+
+  @Get('themes')
+  @ApiOperation({ summary: 'Get themes by topic' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of themes for the specified topic',
+    content: {
+      'application/json': {
+        example: [
+          { id: 'basics', title: 'Basics' },
+          { id: 'hooks', title: 'Hooks' },
+        ],
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Topic ID is required' })
+  @ApiResponse({ status: 404, description: 'Topic not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  async getThemesByTopic(@Query('topicId') topicId: string) {
+    if (!topicId) {
+      throw new HttpException('Topic ID is required', HttpStatus.BAD_REQUEST);
+    }
+    return await this.themeService.findByTopicId(topicId);
+  }
+
+  @Post('structure')
+  @ApiOperation({ summary: 'Get full structure starting from domain' })
+  @ApiResponse({
+    status: 200,
+    description: 'Full structure with domain, topics, themes, and questions',
+    content: {
+      'application/json': {
+        example: {
+          id: 'frontend',
+          title: 'Frontend Development',
+          topics: [
+            {
+              id: 'react',
+              title: 'React',
+              themes: [
+                {
+                  id: 'basics',
+                  title: 'Basics',
+                  questions: [
+                    {
+                      id: 'q1',
+                      title: 'What is React?',
+                      weight: 5,
+                      tags: ['junior'],
+                      followUpQuestions: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Domain ID is required' })
+  @ApiResponse({ status: 404, description: 'Domain not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  async getStructure(@Body() dto: GetStructureDTO) {
+    if (!dto.domainId) {
+      throw new HttpException('Domain ID is required', HttpStatus.BAD_REQUEST);
+    }
+    return await this.questionsService.getStructure(dto);
   }
 
   @Get('export')

@@ -1,7 +1,5 @@
 import Neode from 'neode';
 
-import { TEntityType } from '../model';
-
 import { EUserRole } from '@/common/models';
 
 export const UserSchema: Neode.SchemaObject = {
@@ -14,5 +12,3 @@ export const UserSchema: Neode.SchemaObject = {
   createdAt: { type: 'datetime', default: () => new Date().toISOString() },
   updatedAt: { type: 'datetime', default: () => new Date().toISOString() },
 };
-
-export type TUser = TEntityType<typeof UserSchema>;

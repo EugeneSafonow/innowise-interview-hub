@@ -2,28 +2,28 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import Neode from 'neode';
 
 import { BaseNeodeService } from '../../database/neode.service';
-import { NEO4J_TOKEN } from '../../database/neode.provider';
+import { NEO4J_TOKEN, TNeo4jTransaction } from '../../database';
 import { EEntities } from '../../database/model';
-import { TTopic } from '../../database/schemas/topic.schema';
+import { DomainService } from './domain.service';
 
-import { TNeo4jTransaction } from '@/database';
+import { ITopic } from '@/database';
 
 @Injectable()
-export class TopicService extends BaseNeodeService<TTopic, Partial<TTopic>, Partial<TTopic>> {
-  constructor(@Inject(NEO4J_TOKEN) neode: Neode) {
+export class TopicService extends BaseNeodeService<ITopic, Partial<ITopic>, Partial<ITopic>> {
+  constructor(@Inject(NEO4J_TOKEN) neode: Neode, private readonly domainService: DomainService) {
     super(neode, EEntities.Topic);
   }
 
-  async findOneByTitle(title: string): Promise<TTopic | null> {
+  async findOneByTitle(title: string): Promise<ITopic | null> {
     try {
       const instance = await this.neode.model(this.modelName).first('title', title);
-      return instance ? (await instance.toJson() as TTopic) : null;
+      return instance ? (await instance.toJson() as ITopic) : null;
     } catch (error) {
       throw error;
     }
   }
 
-  async findTopicById(id: string): Promise<TTopic> {
+  async findTopicById(id: string): Promise<ITopic> {
     try {
       const topic = await this.findOne(id);
       if (!topic) {
@@ -35,7 +35,7 @@ export class TopicService extends BaseNeodeService<TTopic, Partial<TTopic>, Part
     }
   }
 
-  async updateTopicById(id: string, data: Partial<TTopic>): Promise<TTopic> {
+  async updateTopicById(id: string, data: Partial<ITopic>): Promise<ITopic> {
     try {
       const topic = await this.update(id, data);
       if (!topic) {
@@ -54,6 +54,27 @@ export class TopicService extends BaseNeodeService<TTopic, Partial<TTopic>, Part
         throw new NotFoundException('Topic not found');
       }
     } catch (error) {
+      throw error;
+    }
+  }
+
+  async findByDomainId(domainId: string): Promise<ITopic[]> {
+    try {
+      const domain = await this.domainService.findOneWithRelations(domainId);
+
+      if (!domain) {
+        throw new NotFoundException(`Domain with id ${domainId} not found`);
+      }
+
+      if (!domain.topics || !Array.isArray(domain.topics)) {
+        return [];
+      }
+
+      return domain.topics
+        .filter(topic => topic)
+        .sort((a, b) => a.title.localeCompare(b.title));
+    } catch (error) {
+      this.logger.error('Error finding topics by domain:', error);
       throw error;
     }
   }

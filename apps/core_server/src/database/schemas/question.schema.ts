@@ -1,7 +1,5 @@
 import Neode from 'neode';
 
-import { TEntityType } from '../model';
-
 export const QuestionSchema: Neode.SchemaObject = {
   id: { type: 'uuid', primary: true, required: true },
   title: { type: 'string', required: true, unique: true },
@@ -10,6 +8,6 @@ export const QuestionSchema: Neode.SchemaObject = {
 
   createdAt: { type: 'datetime', default: () => new Date().toISOString() },
   updatedAt: { type: 'datetime', default: () => new Date().toISOString() },
-};
 
-export type TQuestion = TEntityType<typeof QuestionSchema>;
+  followUpQuestions: { type: 'relationships', target: 'Question', direction: 'out', relationship: 'HAS_FOLLOW_UP', eager: true },
+};
